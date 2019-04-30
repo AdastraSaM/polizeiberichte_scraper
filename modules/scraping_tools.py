@@ -2,10 +2,7 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import time
 
-HOSTNAME = "https://www.presseportal.de"
-START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
-SLEEP_SECS = 1
-COUNT_OF_SUBSEQUENT_SITES = 20
+SLEEP_SECS = 0.5
 
 
 def get_pages_not_found(all_pages_not_found):
