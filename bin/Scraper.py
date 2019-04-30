@@ -27,4 +27,4 @@ if __name__ == "__main__":
     df.drop_duplicates(inplace=True)
 
     # Export data
-    df.to_csv(r"../out/Test.csv", sep=";", encoding="UTF-8", header=True, quotechar='"')
+    df.to_csv(r"../out/Polizeiberichte.csv", sep=";", encoding="UTF-8", header=True, quotechar='"', index=False)

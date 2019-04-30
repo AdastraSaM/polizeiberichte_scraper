@@ -268,6 +268,15 @@ def extract_location_from_headline(df):
 
     # Remove start from Hauptartikel
     df["Hauptartikel"] = df["Hauptartikel"].apply(lambda st: st[find_nth_occurrence(st, ")", 1) + 1:])
+
+    # Strip spaces from Beschreibung
+    df["Beschreibung"] = df["Beschreibung"].str.strip()
+
+    # Extract the place from Beschreibung
+    df["Place"] = [t.split(" ")[0] for t in df["Beschreibung"]]
+    df["Author"] = [t.split(" ")[3] for t in df["Beschreibung"]]
+
+
     print("Extraction complete.")
     return df
 
