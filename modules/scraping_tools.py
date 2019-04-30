@@ -1,6 +1,8 @@
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import time
+import pandas as pd
+from dateutil.parser import parse
 
 SLEEP_SECS = 0.5
 HOSTNAME = "https://www.presseportal.de"
@@ -9,25 +11,21 @@ COUNT_OF_SUBSEQUENT_SITES = 1
 
 def get_pages_not_found(all_pages_not_found):
     """
-    Find links for all given pages. Pages that throw an error are returned as a separate list.
+    Find links for all given pages.
 
     :param all_pages_not_found: A list of pages for which links are to be found.
-    :return: A list of links and a list of pages for which links could not be found
+    :return: A list of links
     """
 
     links = []
     links_not_found = []
     for page in all_pages_not_found:
         print(page)
-        try:
-            bs = BeautifulSoup(page, "html.parser")
-            tag = bs.find(class_="pagination-next")
-            links.append(HOSTNAME + tag.attrs["data-url"][1:])
-            time.sleep(SLEEP_SECS)
-        except:
-            time.sleep(SLEEP_SECS)
-            links_not_found.append("HOSTNAME" + tag.attrs["data-url"][1:])
-    return links, links_not_found
+        bs = BeautifulSoup(page, "html.parser")
+        tag = bs.find(class_="pagination-next")
+        links += [HOSTNAME + tag.attrs["data-url"][1:]]
+        time.sleep(SLEEP_SECS)
+    return links
 
 
 def get_all_sites(start, count_of_subsequent_sites):
@@ -36,7 +34,7 @@ def get_all_sites(start, count_of_subsequent_sites):
 
     :param start: The page from which to begin.
     :param count_of_subsequent_sites: The number of subsequent sites to be explored.
-    :return: a list of links to pages and a list of pages for which no link could be found
+    :return: a list of links to pages
     """
 
     print("Getting sites...")
@@ -46,50 +44,40 @@ def get_all_sites(start, count_of_subsequent_sites):
     successes = 0
     no_successes = 0
     for i in range(1, count_of_subsequent_sites + 1):
-        try:
-            bs = BeautifulSoup(html, "html.parser")
-            tag = bs.find(class_="pagination-next")
-            pages.append(HOSTNAME + tag.attrs["data-url"][1:])
-            html = urlopen(HOSTNAME + tag.attrs["data-url"][1:])
-            time.sleep(SLEEP_SECS)
-            successes += 1
-        except:
-            time.sleep(SLEEP_SECS)
-            no_successes += 1
-            pages_not_found.append(HOSTNAME + tag.attrs["data-url"][1:])
+        bs = BeautifulSoup(html, "html.parser")
+        tag = bs.find(class_="pagination-next")
+        pages += [HOSTNAME + tag.attrs["data-url"][1:]]
+        html = urlopen(HOSTNAME + tag.attrs["data-url"][1:])
         time.sleep(SLEEP_SECS)
+        successes += 1
+
         print("get_all_sites progress " + str(
-            round(((i / count_of_subsequent_sites) * 100), 2)) + "%" + " successes: " + str(
-            successes) + " no_successes: " + str(no_successes))
-    links, links_still_not_found = get_pages_not_found(pages_not_found)
+            round(((i / count_of_subsequent_sites) * 100), 2)) + "%" + " successful: " + str(
+            successes) + " unsuccessful: " + str(no_successes))
+    links = get_pages_not_found(pages_not_found)
 
     for link in links:
         pages.append(link)
-
     print("Getting sites complete.")
-    return pages, links_still_not_found
+    return pages
 
 
 def get_corpus_from_link(links):
     """
-    Get the corpus for each given link. Links for which no corpus could be found are stored in a separate list.
+    Get the corpus for each given link.
 
     links -- a list of links
     """
     print("Getting corpuses...")
     main_site_corpuses = []
-    remaining_sites = []
     for link in links:
-        try:
-            html = urlopen(link)
-            bs = BeautifulSoup(html, "html.parser")
-            links = bs.find_all("h3", class_="news-headline-clamp")
-            main_site_corpuses.append(links)
-        except:
-            remaining_sites.append(link)
+        html = urlopen(link)
+        bs = BeautifulSoup(html, "html.parser")
+        links = bs.find_all("h3", class_="news-headline-clamp")
+        main_site_corpuses.append(links)
 
     print("Getting corpuses complete.")
-    return main_site_corpuses, remaining_sites
+    return main_site_corpuses
 
 
 def get_links_from_corpus(corpus):
@@ -149,15 +137,14 @@ def get_news_from_links(links):
     separate list.
 
     :param links: A list of links to articles
-    :return: The headline string, the main article text, a list for which no headline and article text could be found
+    :return: The headline string, the main article text, and timestamp of the article
     """
-    print("Getting news text from links...")
+    print("Getting data from links...")
     counter = 0
-    counter2 = 0
     news = []
     headlines = []
     main_article_text = []
-    links_not_found = []
+    timestamp = []
     for link in links:
         print("Finding main article for link {}".format(link))
         html = urlopen(HOSTNAME + link)
@@ -165,12 +152,25 @@ def get_news_from_links(links):
         whole_text = bs.find_all("p")
         main_article_text += [find_main_article_for_given_text(whole_text)]
         headlines += [bs.find("h1").get_text()]
+        timestamp += [bs.find("p", class_="date").text]
         counter += 1
         news.append(HOSTNAME + link)
         time.sleep(SLEEP_SECS)
-        print("found-> " + str(counter) + "/" + str(counter2) + " of " + str(len(links)))
-    print("Got news text.")
-    return headlines, main_article_text, news, links_not_found
+        print("found-> " + str(counter) + " of " + str(len(links)))
+    print("Got data.")
+    return headlines, main_article_text, news, timestamp
+
+
+def parse_timestamp(timestamps):
+    """
+    Parses a pandas series of timestamps in the format dd.mm.YYYY - hh:MM into datetime
+
+    :param timestamps: A pandas series of timestamps to be parsed
+    :return: The transformed series as a list
+    """
+    # Remove dash and parse as datetime
+    timestamps_parsed = [parse(x.replace("– ", "")) for x in timestamps]
+    return timestamps_parsed
 
 
 def extract_date_from_column(df, column):
