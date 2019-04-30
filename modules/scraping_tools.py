@@ -3,7 +3,9 @@ from bs4 import BeautifulSoup
 import time
 
 SLEEP_SECS = 0.5
-
+HOSTNAME = "https://www.presseportal.de"
+START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
+COUNT_OF_SUBSEQUENT_SITES = 1
 
 def get_pages_not_found(all_pages_not_found):
     """
