@@ -7,7 +7,7 @@ import time
 HOSTNAME = "https://www.presseportal.de"
 START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
 SLEEP_SECS = 1
-COUNT_OF_SUBSEQUENT_SITES = 1
+COUNT_OF_SUBSEQUENT_SITES = 20
 
 
 def get_pages_not_found(all_pages_not_found):
@@ -140,7 +140,7 @@ def remove_control_characters(df, column):
     :return: The dataframe with all control characters replaced by spaces.
     """
     print("Removing control characters...")
-    df[column].replace({"\\t": " ", "\\n": " ", "\\n": " "}, inplace=True)
+    df[column].replace({r"\t": " ", r"\n": " ", r"\n": " "}, regex=True, inplace=True)
     print("Control characters removed.")
     return df
 
