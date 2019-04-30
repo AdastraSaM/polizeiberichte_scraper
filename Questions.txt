@@ -1,0 +1,24 @@
+Meta-Questions (on the articles):
+* Are there common words, phrases (openings or closings) that are used often?
+* What are typical times for articles to be published?
+* How long does it usually take from the crime to the article being published?
+
+
+Syntactic questions on the content
+* How long are articles in general?
+* Analysis of the distribution of expressions in the articles
+	- Comparison to known distributions of german texts (news reports?)
+* Analysis of statistics on the texts
+	- Comparison to known statistics on german texts (news reports?)
+
+
+Questions on the content:
+* What are safe or dangerous areas?
+* Is there a connection between the time of the crime and the type?
+* Visualization to support this
+	- Count of crimes at locations as heatmap
+	- Analysis of the counts by category
+
+
+Advanced topics:
+* Comparison between different distributions and statistics on our data to the official BKA data
