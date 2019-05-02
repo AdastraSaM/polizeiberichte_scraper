@@ -4,10 +4,11 @@ import time
 import pandas as pd
 from dateutil.parser import parse
 
-SLEEP_SECS = 0.5
+SLEEP_SECS = 1
 HOSTNAME = "https://www.presseportal.de"
 START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
-COUNT_OF_SUBSEQUENT_SITES = 20
+COUNT_OF_SUBSEQUENT_SITES = 1
+
 
 def get_pages_not_found(all_pages_not_found):
     """
@@ -145,6 +146,7 @@ def get_news_from_links(links):
     headlines = []
     main_article_text = []
     timestamp = []
+    links = links[1:5]
     for link in links:
         print("Finding main article for link {}".format(link))
         html = urlopen(HOSTNAME + link)
@@ -182,7 +184,7 @@ def extract_date_from_column(df, column):
     :return:
     """
     print("Extracting date from column {}".format(column))
-    df["Date"] = df.Headline.str.extract('(\d+)')
+    df["Date"] = df["Ueberschrift"].str.extract(r'(\d+)')
     print("Date extracted")
     df["Date"] = df["Date"].apply(lambda x: "{}{}".format("20", x))
     df["Date"].fillna(method="ffill", inplace=True)
@@ -193,28 +195,28 @@ def extract_date_from_column(df, column):
     df["Date"] = df["Date"].apply(lambda x: pd.to_datetime(str(x), format="%Y%m%d") if len(x) == 8 else "")
 
     # Remove extracted date from the original column
-    df[column] = df[column].str.replace("\d+", "")
+    df[column] = df[column].str.replace(r"\d+", "")
     print("Extraction complete.")
     return df
 
 
-def clean_headline(df):
+def clean_headline(headlines):
     """
     Removes leading and trailing whitespaces from the Headline column and removes unnecessary parts.
 
-    :param df: The dataframe to be cleaned
-    :return: Dataframe with cleaned headline column
+    :param headlines: A list of headlines
+    :return: A list of cleaned headlines
     """
     print("Cleaning headlines...")
-    df["Headline"] = df["Headline"].apply(lambda st: st.lstrip())
+    headlines = headlines.apply(lambda x: x.lstrip())
     # Remove beginning from Headline (remove 4digit Number)
-    df["Headline"] = df["Headline"].str.replace("\d{4}", "", regex=True)
-    df["Headline"] = df["Headline"].str.replace("\d{3}", "", regex=True)
-    df["Headline"] = df["Headline"].str.replace("POL-F:", "")
+    headlines = headlines.str.replace(r"\d{4}", "", regex=True)
+    headlines = headlines.str.replace(r"\d{3}", "", regex=True)
+    headlines = headlines.str.replace("POL-F:", "")
 
-    df["Headline"] = df["Headline"].apply(lambda st: st.lstrip())
+    headlines = headlines.apply(lambda x: x.lstrip(" -"))
     print("Headlines cleaned.")
-    return df
+    return headlines
 
 
 def find_nth_occurrence(string, substring, n):
@@ -233,77 +235,76 @@ def find_nth_occurrence(string, substring, n):
     return i
 
 
-def extract_location_from_headline(df):
+def extract_location_from_headline(headlines):
     """
-    Extracts the location from the headline. The location begins after the first occurence of a ":".
+    Extracts the location from the headlines. The location begins after the first occurence of a ":".
 
     If there are multiple locations, these are separated by a space, "/" or "-", then all secondary locations (those
     after the first separator) will be stored in a new column Location2.
-    :param df: The dataframe containing the Headline column.
-    :return: The original dataframe with the location information for each row in new columns called Location and
-    Location2.
+    :param headlines: A list of headlines.
+    :return: A list of Locations and a second list of secondary locations
     """
     print("Extracting location from headlines...")
-    df["Location"] = df["Headline"].apply(lambda st: st[0:st.find(":")])
-    df["Location"] = df["Location"].str.replace("/", " ")
-    df["Location"] = df["Location"].str.replace("-", " ")
-    df["Location"] = df["Location"].str.replace("Frankfurt", "")
-    df["Location"] = df["Location"].apply(lambda x: x.lstrip())
-
-    # Remove headline
-    df["Headline"] = df["Headline"].apply(lambda st: st[st.find(":") + 1:])
-    df["Headline"] = df["Headline"].apply(lambda st: st.lstrip())
+    locations = headlines.apply(lambda st: st[0:st.find(":")])
+    locations = locations.str.replace("/", " ")
+    locations = locations.str.replace("-", " ")
+    locations = locations.str.replace("Frankfurt", "")
+    locations = locations.apply(lambda x: x.lstrip())
 
     # Extract second location
-    df["Location2"] = df["Location"].str.split(" ").str[1]
+    secondary_locations = locations.str.split(" ").str[1]
 
     # Clean location
-    df["Location"] = df["Location"].str.split(" ").str[0]
-
-    # Remove start of Hauptartikel e.g. Frankfurt (ots) - (ka)
-    df["Headline"].apply(lambda st: st[st.find(" - ") + 2:find_nth_occurrence(st, " ", 3)])
+    locations = locations.str.split(" ").str[0]
 
     print("Extraction complete.")
-    return df
+    return locations, secondary_locations
 
 
-def extract_description(df):
+def extract_description(main_article):
     """
-    Extracts the description from the main article text.
+    Extracts the descriptions from the main article text.
 
-    :param df: The article data containing the column Hauptartikel with the main article text
-    :return: The transformed dataframe with the description as a new field
+    :param main_article: A list of article texts
+    :return: A list of descriptions
     """
-    # Extract start of Hauptartikel
-    df["Beschreibung"] = df["Hauptartikel"].apply(lambda st: st[0:find_nth_occurrence(st, ")", 1) + 1])
-    # Remove start from Hauptartikel
-    df["Hauptartikel"] = df["Hauptartikel"].apply(lambda st: st[find_nth_occurrence(st, ")", 1) + 1:])
-    # Strip spaces from Beschreibung
-    df["Beschreibung"] = df["Beschreibung"].str.strip()
+    descriptions = main_article.apply(lambda x: x[0 : find_nth_occurrence(x, ")", 1) + 1])
 
-    return df
+    # Strip leading and trailing spaces from descriptions
+    descriptions = descriptions.apply(lambda x: x.strip())
 
 
-def extract_place(df):
+    return descriptions
+
+
+def remove_start_from_main_article(main_articles):
     """
-    Extracts the place from the description
-    :param df: The article data containing a column Beschreibung with the description
-    :return: The original dataframe with a new column for the place
+    Removes the beginning of the main articles which is not needed.
+    :param main_articles: A list of main article texts
+    :return: The given list but with the unnecessary beginning cleaned from the texts
     """
-    df["Place"] = [t.split(" ")[0] for t in df["Beschreibung"]]
-    return df
+    return main_articles.apply(lambda x: x[find_nth_occurrence(x, ")", 1) + 1:])
 
 
-def extract_author(df):
+def extract_place(descriptions):
     """
-    Extracts the author from the description
-    :param df: The article data containing a column Beschreibung with the description
-    :return: The original dataframe with a new column for the author
+    Extracts the places from the descriptions
+    :param descriptions: A list of descriptions
+    :return: The list of places
     """
-    df.to_csv("debug.csv", sep=";", encoding="UTF-8")
-    df["Author"] = [t.split(" ")[len(t.split(" "))-1] for t in df["Beschreibung"]]
-    # Replace all wrongly parsed authors by a dummy value
-    df["Author"] = df["Author"].replace(r'\(*+\)', '(Unknown)')
+    places = pd.Series([t.split(" ")[0] for t in descriptions])
+    return places
+
+
+def extract_author(descriptions):
+    """
+    Extracts the authors from the given list of descriptions
+    :param descriptions: A list of descriptions
+    :return: The list of authors
+    """
+    authors = pd.Series([t.split(" ")[len(t.split(" ")) - 1] for t in descriptions])
+    # Replace all authors with incorrect format (hinting to a mistake in the description structure) by a dummy value
+    authors.replace(r'\(*+\)', '(Unknown)', inplace=True)
     # Remove the brackets from the author token
-    df["Author"]= df["Author"].map(lambda x: x.lstrip(r'(').rstrip(r')'))
-    return df
+    authors = authors.map(lambda x: x.lstrip(r'(').rstrip(r')'))
+    return authors
