@@ -7,7 +7,7 @@ from dateutil.parser import parse
 SLEEP_SECS = 0.5
 HOSTNAME = "https://www.presseportal.de"
 START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
-COUNT_OF_SUBSEQUENT_SITES = 1
+COUNT_OF_SUBSEQUENT_SITES = 20
 
 def get_pages_not_found(all_pages_not_found):
     """
@@ -300,5 +300,6 @@ def extract_author(df):
     :param df: The article data containing a column Beschreibung with the description
     :return: The original dataframe with a new column for the author
     """
-    df["Author"] = [t.split(" ")[3] for t in df["Beschreibung"]]
+    df.to_csv("debug.csv", sep=";", encoding="UTF-8")
+    df["Author"] = [t.split(" ")[len(t.split(" "))-1] for t in df["Beschreibung"]]
     return df
