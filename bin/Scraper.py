@@ -13,7 +13,10 @@ if __name__ == "__main__":
     all_headlines, all_main_articles, all_websites, all_timestamps = st.get_news_from_links(link_for_all_news)
 
     # Save data in dataframe
-    df = pd.DataFrame({"Timestamp": all_timestamps, "Headline": all_headlines, "Hauptartikel": all_main_articles, "Link": all_websites})
+    df = pd.DataFrame({"Timestamp": all_timestamps,
+                       "Headline": all_headlines,
+                       "Hauptartikel": all_main_articles,
+                       "Link": all_websites})
 
     # Clean and transform data
     st.remove_control_characters(df, "Headline")
@@ -24,7 +27,17 @@ if __name__ == "__main__":
     df = st.extract_date_from_column(df, "Headline")
     df = st.clean_headline(df)
     df = st.extract_location_from_headline(df)
+    df = st.extract_description(df)
+    df = st.extract_place(df)
+    df = st.extract_author(df)
+
+
     df.drop_duplicates(inplace=True)
 
     # Export data
-    df.to_csv(r"../out/Polizeiberichte.csv", sep=";", encoding="UTF-8", header=True, quotechar='"', index=False)
+    df.to_csv(r"../out/Polizeiberichte.csv",
+              sep=";",
+              encoding="UTF-8",
+              header=True,
+              quotechar='"',
+              index=False)

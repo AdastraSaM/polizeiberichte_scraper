@@ -263,20 +263,42 @@ def extract_location_from_headline(df):
     # Remove start of Hauptartikel e.g. Frankfurt (ots) - (ka)
     df["Headline"].apply(lambda st: st[st.find(" - ") + 2:find_nth_occurrence(st, " ", 3)])
 
-    # Extract start of Hauptartikel
-    df["Beschreibung"] = df["Hauptartikel"].apply(lambda st: st[0:find_nth_occurrence(st, ")", 1) + 1])
-
-    # Remove start from Hauptartikel
-    df["Hauptartikel"] = df["Hauptartikel"].apply(lambda st: st[find_nth_occurrence(st, ")", 1) + 1:])
-
-    # Strip spaces from Beschreibung
-    df["Beschreibung"] = df["Beschreibung"].str.strip()
-
-    # Extract the place from Beschreibung
-    df["Place"] = [t.split(" ")[0] for t in df["Beschreibung"]]
-    df["Author"] = [t.split(" ")[3] for t in df["Beschreibung"]]
-
-
     print("Extraction complete.")
     return df
 
+
+def extract_description(df):
+    """
+    Extracts the description from the main article text.
+
+    :param df: The article data containing the column Hauptartikel with the main article text
+    :return: The transformed dataframe with the description as a new field
+    """
+    # Extract start of Hauptartikel
+    df["Beschreibung"] = df["Hauptartikel"].apply(lambda st: st[0:find_nth_occurrence(st, ")", 1) + 1])
+    # Remove start from Hauptartikel
+    df["Hauptartikel"] = df["Hauptartikel"].apply(lambda st: st[find_nth_occurrence(st, ")", 1) + 1:])
+    # Strip spaces from Beschreibung
+    df["Beschreibung"] = df["Beschreibung"].str.strip()
+
+    return df
+
+
+def extract_place(df):
+    """
+    Extracts the place from the description
+    :param df: The article data containing a column Beschreibung with the description
+    :return: The original dataframe with a new column for the place
+    """
+    df["Place"] = [t.split(" ")[0] for t in df["Beschreibung"]]
+    return df
+
+
+def extract_author(df):
+    """
+    Extracts the author from the description
+    :param df: The article data containing a column Beschreibung with the description
+    :return: The original dataframe with a new column for the author
+    """
+    df["Author"] = [t.split(" ")[3] for t in df["Beschreibung"]]
+    return df
