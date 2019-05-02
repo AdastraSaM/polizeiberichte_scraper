@@ -246,7 +246,7 @@ def extract_location_from_headline(headlines):
     :return: A list of Locations and a second list of secondary locations
     """
     print("Extracting location from headlines...")
-    locations = headlines.apply(lambda st: st[0:st.find(":")])
+    locations = headlines.apply(lambda x: x[0:x.find(":")])
     locations = locations.str.replace("/", " ")
     locations = locations.str.replace("-", " ")
     locations = locations.str.replace("Frankfurt", "")

@@ -41,7 +41,6 @@ if __name__ == "__main__":
     df["Hauptartikel"] = st.remove_start_from_main_article(df["Hauptartikel"])
 
     # Extract place and author from description
-    df["Ort"] = st.extract_place(df["Beschreibung"])
     df["Author"] = st.extract_author(df["Beschreibung"])
 
     # Remove author, which is the name of the author in brackets
