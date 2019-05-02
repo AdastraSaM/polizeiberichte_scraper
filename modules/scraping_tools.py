@@ -146,7 +146,6 @@ def get_news_from_links(links):
     headlines = []
     main_article_text = []
     timestamp = []
-    links = links[1:5]
     for link in links:
         print("Finding main article for link {}".format(link))
         html = urlopen(HOSTNAME + link)
