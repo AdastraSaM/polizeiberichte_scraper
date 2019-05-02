@@ -3,11 +3,7 @@ from modules import scraping_tools as st
 
 HOSTNAME = "https://www.presseportal.de"
 START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
-COUNT_OF_SUBSEQUENT_SITES = 1
-
-
-
-
+COUNT_OF_SUBSEQUENT_SITES = 20
 
 if __name__ == "__main__":
     # Extract data from the web pages

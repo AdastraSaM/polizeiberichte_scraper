@@ -6,10 +6,12 @@ A simple webscraper for local police reports with basic NLP and text mining on t
 The scraper extracts data from the press articles of the Frankfurt police department 
 https://www.presseportal.de/blaulicht/nr/4970/
 
-The raw data is cleaned up and stored in a csv file.
+The raw data is scraped, cleaned up and stored in a csv file.
 
 ## Analysis
-TODO
+The notebook Basic_Analysis.ipynb can be used for basic inspection of the data and its metadata. The more advanced text
+analytics are currently contained in the notebook PolizeiScrape2.3.ipynb. They will be rewritten as a standalone python 
+module.
 
 ## Upcoming features
 The following extensions could be implemented
