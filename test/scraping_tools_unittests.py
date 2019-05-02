@@ -20,8 +20,10 @@ class ScrapingToolsTest(unittest.TestCase):
     def test_clean_headline(self):
         pass
 
-    def test_find_nth_occurence(self):
-        pass
+    def test_find_nth_occurrence(self):
+        self.assertEqual(st.find_nth_occurrence("aaaaa", "a", 0), 1)
+        self.assertEqual(st.find_nth_occurrence("aaaaa", "a", 1), 2)
+        self.assertEqual(st.find_nth_occurrence("bbbbb", "a", 1), -1)
 
     def test_extract_location_from_headline(self):
         pass

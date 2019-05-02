@@ -7,7 +7,7 @@ from dateutil.parser import parse
 SLEEP_SECS = 1
 HOSTNAME = "https://www.presseportal.de"
 START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
-COUNT_OF_SUBSEQUENT_SITES = 1
+COUNT_OF_SUBSEQUENT_SITES = 20
 
 
 def get_pages_not_found(all_pages_not_found):
@@ -19,7 +19,6 @@ def get_pages_not_found(all_pages_not_found):
     """
 
     links = []
-    links_not_found = []
     for page in all_pages_not_found:
         print(page)
         bs = BeautifulSoup(page, "html.parser")
@@ -220,7 +219,10 @@ def clean_headline(headlines):
 
 def find_nth_occurrence(string, substring, n):
     """
-    Finds the n-th occurence of a given substring in a given string.
+    Finds the index of the n-th occurence of a given substring in a given string. Counting starts at 0, i.e. the n=0
+    gives the index of the first occurrence.
+    If the substring is not contained in the string, the result is -1.
+    The empty string is part of every string, so if the substring is the empty string, the result will always be n+1.
 
     :param string: The string that contains occurences of the substring
     :param substring: The substring to search for
@@ -260,18 +262,17 @@ def extract_location_from_headline(headlines):
     return locations, secondary_locations
 
 
-def extract_description(main_article):
+def extract_description(main_articles):
     """
     Extracts the descriptions from the main article text.
 
-    :param main_article: A list of article texts
+    :param main_articles: A list of article texts
     :return: A list of descriptions
     """
-    descriptions = main_article.apply(lambda x: x[0 : find_nth_occurrence(x, ")", 1) + 1])
+    descriptions = main_articles.apply(lambda x: x[0: find_nth_occurrence(x, ")", 1) + 1])
 
     # Strip leading and trailing spaces from descriptions
     descriptions = descriptions.apply(lambda x: x.strip())
-
 
     return descriptions
 
