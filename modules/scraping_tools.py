@@ -182,15 +182,15 @@ def extract_date_from_column(df, column):
     :return:
     """
     print("Extracting date from column {}".format(column))
-    df["Date"] = df["Ueberschrift"].str.extract(r'(\d+)')
+    df["Datum"] = df["Ueberschrift"].str.extract(r'(\d+)')
     print("Date extracted")
-    df["Date"] = df["Date"].apply(lambda x: "{}{}".format("20", x))
-    df["Date"].fillna(method="ffill", inplace=True)
+    df["Datum"] = df["Datum"].apply(lambda x: "{}{}".format("20", x))
+    df["Datum"].fillna(method="ffill", inplace=True)
     # If first value was missing, propagate first known value backwards
-    df["Date"].fillna(method="bfill", inplace=True)
+    df["Datum"].fillna(method="bfill", inplace=True)
 
     # Convert dates to datetime
-    df["Date"] = df["Date"].apply(lambda x: pd.to_datetime(str(x), format="%Y%m%d") if len(x) == 8 else "")
+    df["Datum"] = df["Datum"].apply(lambda x: pd.to_datetime(str(x), format="%Y%m%d") if len(x) == 8 else "")
 
     # Remove extracted date from the original column
     df[column] = df[column].str.replace(r"\d+", "")
