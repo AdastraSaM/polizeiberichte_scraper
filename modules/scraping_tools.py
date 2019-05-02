@@ -302,4 +302,8 @@ def extract_author(df):
     """
     df.to_csv("debug.csv", sep=";", encoding="UTF-8")
     df["Author"] = [t.split(" ")[len(t.split(" "))-1] for t in df["Beschreibung"]]
+    # Replace all wrongly parsed authors by a dummy value
+    df["Author"] = df["Author"].replace(r'\(*+\)', '(Unknown)')
+    # Remove the brackets from the author token
+    df["Author"]= df["Author"].map(lambda x: x.lstrip(r'(').rstrip(r')'))
     return df
