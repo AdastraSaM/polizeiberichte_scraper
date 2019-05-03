@@ -6,6 +6,7 @@ __author__ = 'don.tuggener@gmail.com'
 
 import re
 import sys
+from modules.ext import ngram_probs
 
 
 def split_compound(word: str):
