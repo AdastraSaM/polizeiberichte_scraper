@@ -9,18 +9,23 @@ HOSTNAME = "https://www.presseportal.de"
 START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
 COUNT_OF_SUBSEQUENT_SITES = 1
 
-if __name__ == "__main__":
-    # Extract data from the web pages
+
+def scrape_from_web():
     all_sites = st.get_all_sites(START_PAGE, COUNT_OF_SUBSEQUENT_SITES)
     corpus = st.get_corpus_from_link(all_sites)
     link_for_all_news = st.get_links_from_corpus(corpus)
     all_headlines, all_main_articles, all_websites, all_timestamps = st.get_news_from_links(link_for_all_news)
-
     # Save data in dataframe
-    berichte_raw = pd.DataFrame({"Timestamp": all_timestamps,
-                       "Ueberschrift": all_headlines,
-                       "Hauptartikel": all_main_articles,
-                       "Link": all_websites})
+    scraped_berichte = pd.DataFrame({"Timestamp": all_timestamps,
+                                 "Ueberschrift": all_headlines,
+                                 "Hauptartikel": all_main_articles,
+                                 "Link": all_websites})
+    return scraped_berichte
+
+
+if __name__ == "__main__":
+    # Extract data from the web pages
+    berichte_raw = scrape_from_web()
 
     # Remove control characters
     st.remove_control_characters(berichte_raw, "Ueberschrift")
