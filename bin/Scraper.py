@@ -1,3 +1,7 @@
+"""
+Scraping of the raw data from the websites
+"""
+
 import pandas as pd
 from modules import scraping_tools as st
 
@@ -13,21 +17,21 @@ if __name__ == "__main__":
     all_headlines, all_main_articles, all_websites, all_timestamps = st.get_news_from_links(link_for_all_news)
 
     # Save data in dataframe
-    berichte = pd.DataFrame({"Timestamp": all_timestamps,
+    berichte_raw = pd.DataFrame({"Timestamp": all_timestamps,
                        "Ueberschrift": all_headlines,
                        "Hauptartikel": all_main_articles,
                        "Link": all_websites})
 
     # Remove control characters
-    st.remove_control_characters(berichte, "Ueberschrift")
-    st.remove_control_characters(berichte, "Hauptartikel")
+    st.remove_control_characters(berichte_raw, "Ueberschrift")
+    st.remove_control_characters(berichte_raw, "Hauptartikel")
 
-    berichte.drop_duplicates(inplace=True)
+    berichte_raw.drop_duplicates(inplace=True)
 
     # Export data
-    berichte.to_csv(r"../out/Polizeiberichte_raw.csv",
-                    sep=";",
-                    encoding="UTF-8",
-                    header=True,
-                    quotechar='"',
-                    index=False)
+    berichte_raw.to_csv(r"../out/Polizeiberichte_raw.csv",
+                        sep=";",
+                        encoding="UTF-8",
+                        header=True,
+                        quotechar='"',
+                        index=False)
