@@ -39,18 +39,25 @@ if __name__ == "__main__":
 
     # Remove all dates from headline
     berichte["Ueberschrift"] = berichte["Ueberschrift"].str.replace(r'\d+', '')
+    # Clean headline
+    berichte["Ueberschrift_cleaned"] = tt.clean_column(berichte["Ueberschrift"])
+    # Lemmatize words in headline text
+    berichte["Ueberschrift_lemmatized"] = tt.lemmatize_document_list(berichte["Ueberschrift_cleaned"])
+    # Clean headline again after lemmatization
+    berichte["Ueberschrift_lemmatized_cleaned"] = tt.clean_column(berichte["Ueberschrift_lemmatized"])
+    # Remove stopwords from headline
+    berichte["Ueberschrift_lemmatized_cleaned_no_stopwords"] = berichte["Ueberschrift_lemmatized_cleaned"].apply(tt.remove_stopwords)
+
 
     # Clean main article
     berichte["Hauptartikel_cleaned"] = tt.clean_column(berichte["Hauptartikel"])
-
     # Lemmatize words in main article text
     berichte["Hauptartikel_lemmatized"] = tt.lemmatize_document_list(berichte["Hauptartikel_cleaned"])
-
     # Clean main article again after lemmatization
-    berichte["Hauptarikel_lemmatized_cleaned"] = tt.clean_column(berichte["Hauptartikel_lemmatized"])
+    berichte["Hauptartikel_lemmatized_cleaned"] = tt.clean_column(berichte["Hauptartikel_lemmatized"])
+    # Remove stopwords from main article
+    berichte["Hauptartikel_lemmatized_cleaned_no_stopwords"] = berichte["Hauptartikel_lemmatized_cleaned"].apply(tt.remove_stopwords)
 
-    # Remove stopwords
-    berichte["Hauptarikel_lemmatized_cleaned"] = berichte["Hauptarikel_lemmatized_cleaned"].apply(tt.remove_stopwords)
 
     # Export transformed data to file
     berichte.to_csv(r"../out/Polizeiberichte_transformed.csv",
