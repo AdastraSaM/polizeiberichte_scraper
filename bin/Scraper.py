@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     berichte_raw.drop_duplicates(inplace=True)
 
-    # Export data
+    # Export data to file
     berichte_raw.to_csv(r"../out/Polizeiberichte_raw.csv",
                         sep=";",
                         encoding="UTF-8",
