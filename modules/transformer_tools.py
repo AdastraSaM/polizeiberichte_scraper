@@ -4,7 +4,21 @@ Utility functions for the cleaning of the scraped data, and transformation, extr
 
 
 import pandas as pd
+import re
 from dateutil.parser import parse
+
+from modules.ext import char_split
+
+import spacy
+from spacy.cli import link
+from spacy.util import get_package_path
+
+model_name = "de_core_news_sm"
+package_path = get_package_path(model_name)
+link(model_name, model_name, force=True, model_path=package_path)
+nlp = spacy.load("de_core_news_sm")
+
+STOPWORDS_FILE = "Stopwords1.txt"
 
 
 def parse_timestamp(timestamps):
@@ -154,3 +168,115 @@ def extract_author(descriptions):
     # Remove the brackets from the author token
     authors = authors.map(lambda x: x.lstrip(r'(').rstrip(r')'))
     return authors
+
+
+
+def lemmatize_as_string(document):
+    """
+    Creates a string of all lemmatized words in the given document, the separator is space.
+    :param document: A document to be lemmatized.
+    :return: A string of lemmatized words, separated by spaces
+    """
+    doc = nlp(text=document)
+    lemmatized_words = []
+    for token in doc:
+        lemmatized_words.append(token.lemma_)
+    lemmatized_document = " ".join(lemmatized_words)
+    return lemmatized_document
+
+
+def get_stopword_list():
+    """
+    Gets the stopwords from the file.
+    :return: List of stopwords
+    """
+    stopwords = open(r"../resources/%s" % STOPWORDS_FILE, "r")
+    stopwords = list(stopwords)
+    stopwords = list(map(lambda s: s.strip(), stopwords))
+    return stopwords
+
+
+def get_string_from_list(liste):
+    """
+    Turns the given list into a string, with the list elements separated by spaces.
+    :param liste: A list of elements that can be turned into strings
+    :return: A string of the list elements separated by spaces
+    """
+    return ' '.join([str(x) for x in liste])
+
+
+def remove_stopwords(document):
+    """
+    Removes all stopwords from document.
+    :param document: A document containing words.
+    :return: The document without the stopwords
+    """
+    stopwords = get_stopword_list()
+    words = document.split(" ")
+    words_without_stopwords = [x for x in words if x not in stopwords]
+    document_no_stopwords = get_string_from_list(words_without_stopwords)
+    return document_no_stopwords
+
+
+def clean_column(documents):
+    """
+    Clean the whole column: remove white spaces, digits and transform to lowercase.
+    :param documents: A list of documents to clean
+    :return: A list of cleaned documents
+    """
+    # Removing everything non-alphanumeric
+    documents = [re.sub("[^a-zA-Z äöüÄÖÜß]+", "", x) for x in documents]
+    # Converting to lowercase
+    documents = [x.lower() for x in documents]
+    documents = pd.Series(documents)
+    # Remove digits
+    documents = documents.str.replace(r'\d+', '')
+    return documents
+
+
+def split_compound_words(documents):
+    """
+    Split German compound words in all documents into their parts
+    :param documents: A list of documents
+    :return: A list of strings, where each string consists of the words from the input with compound words split.
+    Word separator in the strings is a space.
+    """
+    # Create a matrix of the words from the documents. The n-th col contains the n-th word in the document.
+    words = documents.str.split(' ', expand=True)
+    words = words.rename(columns=lambda x: "string_{}".format(x+1))
+
+    for word_position in words.columns:
+        documents = words[word_position]
+        documents.fillna(value="", inplace= True)
+
+        # Splitting
+        compound_words_split = documents.apply(char_split.split_compound)
+        compound_words_split = [item[0] for item in compound_words_split]
+        compound_words_split = pd.DataFrame(compound_words_split)
+        compound_words_split.columns = ["confidence", "first_word", "second_word"]
+
+        # Only keep words that received positive confidence from the splitter
+        words_to_drop = compound_words_split["confidence"] <= 0
+        compound_words_split[words_to_drop] = " "
+
+        compound_words_split["combined"] = compound_words_split["first_word"] + " " + compound_words_split["second_word"]
+        words[word_position] = compound_words_split["combined"]
+
+    # Connect the words for each document into a long, space-separated string
+    words["all_combined"] = words.apply(' '.join, axis=1)
+    return words["all_combined"]
+
+
+def lemmatize_document_list(documents):
+    """
+    Lemmatizes the words in all given documents.
+    :param documents: A list of documents made up of words to be lemmatized.
+    :return: A list where each item is a string of the lemmatized words for each document, separated by spaces.
+    """
+    # Lemmatize
+    lemmatized_berichte = [lemmatize_as_string(x) for x in documents]
+    # Make everything lowercase
+    lemmatized_berichte = [x.lower() for x in lemmatized_berichte]
+    # Concatenate as a long string
+    lemmatized_berichte = [' '.join(x.split(" ")) for x in lemmatized_berichte]
+    return lemmatized_berichte
