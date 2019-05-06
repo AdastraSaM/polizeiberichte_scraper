@@ -140,20 +140,33 @@ def get_news_from_links(links):
     counter = 0
     news = []
     headlines = []
-    main_article_text = []
+    main_article_texts = []
     timestamp = []
     for link in links:
-        print("Finding main article for link {}".format(link))
+        print("Parsing article from link {}".format(link))
         html = urlopen(HOSTNAME + link)
         bs = BeautifulSoup(html, "html.parser")
-        whole_text = bs.find_all("p")
-        main_article_text += [find_main_article_for_given_text(whole_text)]
-        headlines += [bs.find("h1").get_text()]
-        timestamp += [bs.find("p", class_="date").text]
+        article = bs.find("article")
+        timestamp += [article.find("p", class_="date").text]
+        headlines += [article.find("h1").get_text()]
+
+        # Get text for the current article and add it to the list of texts
+        main_article_text = ""
+        # The first two <p> tags are timestamp and headline
+        for tag in article.find_all("p")[3:]:
+            # Stop adding data when the end of the article text is reached
+            if tag.text.find("Rückfragen bitte an") != -1 or tag.text.find("Original-Content von") != -1:
+                break
+            # If the end is not reached, add text
+            main_article_text += tag.text
+
+        print(main_article_text)
+        main_article_texts += [main_article_text]
+
         counter += 1
         news.append(HOSTNAME + link)
         time.sleep(SLEEP_SECS)
         print("found-> " + str(counter) + " of " + str(len(links)))
     print("Got data.")
-    return headlines, main_article_text, news, timestamp
+    return headlines, main_article_texts, news, timestamp
 
