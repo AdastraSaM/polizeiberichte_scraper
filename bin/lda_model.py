@@ -54,8 +54,6 @@ if __name__ == "__main__":
 
         topics = get_topics(lda_model_tfidf, bow_corpus)
 
-
-
     topics = pd.DataFrame(topics)
     berichte["TopicNumber"] = topics.iloc[:, 0]
     berichte["TopicProb"] = topics.iloc[:, 1]
