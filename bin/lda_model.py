@@ -1,5 +1,6 @@
 """
 Building an LDA model on the transformed data
+http://jmlr.org/papers/volume3/blei03a/blei03a.pdf
 """
 
 import spacy
