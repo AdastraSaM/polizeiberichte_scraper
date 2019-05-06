@@ -49,6 +49,8 @@ def extract_date_from_column(df, column):
     # If first value was missing, propagate first known value backwards
     df["Datum"].fillna(method="bfill", inplace=True)
 
+    # Remove erroneous formatted dates
+    df["Datum"] = df["Datum"].str.replace(r"^([\d]{8})", "")
     # Convert dates to datetime
     df["Datum"] = df["Datum"].apply(lambda x: pd.to_datetime(str(x), format="%Y%m%d") if len(x) == 8 else "")
 
