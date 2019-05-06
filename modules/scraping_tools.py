@@ -7,24 +7,6 @@ HOSTNAME = "https://www.presseportal.de"
 START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
 
 
-def get_pages_not_found(all_pages_not_found):
-    """
-    Find links for all given pages.
-
-    :param all_pages_not_found: A list of pages for which links are to be found.
-    :return: A list of links
-    """
-
-    links = []
-    for page in all_pages_not_found:
-        print(page)
-        bs = BeautifulSoup(page, "html.parser")
-        tag = bs.find(class_="pagination-next")
-        links += [HOSTNAME + tag.attrs["data-url"][1:]]
-        time.sleep(SLEEP_SECS)
-    return links
-
-
 def get_all_sites(start, count_of_subsequent_sites):
     """
     Get the links of a given number of subsequent sites from a given start page.
@@ -36,7 +18,6 @@ def get_all_sites(start, count_of_subsequent_sites):
 
     print("Getting sites...")
     pages = []
-    pages_not_found = []
     html = urlopen(start)
     successes = 0
     no_successes = 0
@@ -51,10 +32,6 @@ def get_all_sites(start, count_of_subsequent_sites):
         print("get_all_sites progress " + str(
             round(((i / count_of_subsequent_sites) * 100), 2)) + "%" + " successful: " + str(
             successes) + " unsuccessful: " + str(no_successes))
-    links = get_pages_not_found(pages_not_found)
-
-    for link in links:
-        pages.append(link)
     print("Getting sites complete.")
     return pages
 
@@ -160,7 +137,6 @@ def get_news_from_links(links):
             # If the end is not reached, add text
             main_article_text += tag.text
 
-        print(main_article_text)
         main_article_texts += [main_article_text]
 
         counter += 1
