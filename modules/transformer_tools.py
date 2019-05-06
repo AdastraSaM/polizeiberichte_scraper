@@ -172,7 +172,6 @@ def extract_author(descriptions):
     return authors
 
 
-
 def lemmatize_as_string(document):
     """
     Creates a string of all lemmatized words in the given document, the separator is space.

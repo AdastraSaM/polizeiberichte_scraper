@@ -2,6 +2,8 @@ import unittest
 import pandas as pd
 from modules import transformer_tools as tt
 
+from dateutil.parser import parse
+
 
 class TransformerToolsTest(unittest.TestCase):
 
@@ -11,7 +13,7 @@ class TransformerToolsTest(unittest.TestCase):
                                     encoding="UTF-8")
 
     def test_parse_timestamp(self):
-        self.fail()
+        self.assertEqual(tt.parse_timestamp(["05.05.2019 – 10:47", "06.10.2018 – 1:47", "04.05.2016 - 00:00"]), [parse("05.05.2019 10:47"), parse("06.10.2018 1:47"), parse("04.05.2016 00:00")])
 
     def test_extract_date_from_column(self):
         self.fail()
