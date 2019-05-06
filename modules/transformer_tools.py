@@ -257,6 +257,9 @@ def split_compound_words(documents):
         compound_words_split = pd.DataFrame(compound_words_split)
         compound_words_split.columns = ["confidence", "first_word", "second_word"]
 
+        # For non-compound words first_word and second_word are equal. To evade doubling these words, remove second word
+        compound_words_split.loc[compound_words_split["first_word"] == compound_words_split["second_word"], "second_word"] = ""
+
         # Only keep words that received positive confidence from the splitter
         words_to_drop = compound_words_split["confidence"] < 0
         compound_words_split[words_to_drop] = " "
