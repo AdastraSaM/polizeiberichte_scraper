@@ -25,7 +25,6 @@ if __name__ == "__main__":
     dataset = berichte["Hauptartikel_lemmatized_cleaned_no_stopwords"].apply(lambda x: str(x).split(" "))
     dataset_head = berichte["Ueberschrift_lemmatized_cleaned_no_stopwords"].apply(lambda x: str(x).split(" "))
 
-
     vocab = gensim.corpora.Dictionary(dataset)
     vocab_heads = gensim.corpora.Dictionary(dataset_head)
 
@@ -38,28 +37,26 @@ if __name__ == "__main__":
     corpus_tfidf = tfidf[bow_corpus]
     corpus_tfidf_head = tfidf[bow_corpus_heads]
 
+    dataset = dataset.apply(tt.get_string_from_list)
 
-    data = dataset.apply(tt.get_string_from_list)
-
-
-    #Running LDA using TF-IDF
+    # Build LDA model using TF-IDF
     lda_model_tfidf = gensim.models.LdaMulticore(corpus_tfidf, num_topics=7, id2word=vocab, passes=2, workers=4)
     for idx, topic in lda_model_tfidf.print_topics(7):
         print('Topic: {} Word: {}'.format(idx, topic))
 
 
-        def getTopics(lda_model_tfidf, bow_corpus):
-            TopicList = []
+        def get_topics(lda_model_tfidf, bow_corpus):
+            topics = []
             for i in range(0, len(lda_model_tfidf.get_document_topics(bow_corpus))):
-                TopicList.append(max(lda_model_tfidf.get_document_topics(bow_corpus[i]), key=lambda x: x[1]))
-            return TopicList
+                topics.append(max(lda_model_tfidf.get_document_topics(bow_corpus[i]), key=lambda x: x[1]))
+            return topics
 
 
-        TopicList = getTopics(lda_model_tfidf, bow_corpus)
+        topics = get_topics(lda_model_tfidf, bow_corpus)
 
 
 
-    TopicList = pd.DataFrame(TopicList)
-    berichte["TopicNumber"]= TopicList.iloc[:, 0]
-    berichte["TopicProb"]= TopicList.iloc[:, 1]
+    topics = pd.DataFrame(topics)
+    berichte["TopicNumber"] = topics.iloc[:, 0]
+    berichte["TopicProb"] = topics.iloc[:, 1]
     berichte.head()
