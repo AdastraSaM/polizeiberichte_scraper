@@ -7,10 +7,14 @@ from modules import scraping_tools as st
 
 HOSTNAME = "https://www.presseportal.de"
 START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
-COUNT_OF_SUBSEQUENT_SITES = 1
+COUNT_OF_SUBSEQUENT_SITES = 80
 
 
 def scrape_from_web():
+    """
+    Reads the raw article data from the websites and returns them in a dataframe.
+    :return: A dataframe containing the timestamps, headlines, articles and link.
+    """
     all_sites = st.get_all_sites(START_PAGE, COUNT_OF_SUBSEQUENT_SITES)
     corpus = st.get_corpus_from_link(all_sites)
     link_for_all_news = st.get_links_from_corpus(corpus)

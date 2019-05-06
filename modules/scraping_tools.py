@@ -5,7 +5,6 @@ import time
 SLEEP_SECS = 0.1
 HOSTNAME = "https://www.presseportal.de"
 START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
-COUNT_OF_SUBSEQUENT_SITES = 80
 
 
 def get_pages_not_found(all_pages_not_found):
