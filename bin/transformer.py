@@ -8,7 +8,7 @@ from modules import transformer_tools as tt
 
 if __name__ == "__main__":
     # Read the scraped raw data from file
-    berichte = pd.read_csv(r"../out/Polizeiberichte_raw_example.csv",
+    berichte = pd.read_csv(r"../out/Polizeiberichte_raw.csv",
                            sep=";",
                            encoding="UTF-8")
 
