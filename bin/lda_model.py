@@ -22,8 +22,8 @@ if __name__ == "__main__":
                            sep=";",
                            encoding="UTF-8")
 
-    dataset = berichte["Hauptartikel_lemmatized_cleaned_no_stopwords"].apply(lambda x: x.split(" "))
-    dataset_head = berichte["Ueberschrift_lemmatized_cleaned_no_stopwords"].apply(lambda x: x.split(" "))
+    dataset = berichte["Hauptartikel_lemmatized_cleaned_no_stopwords"].apply(lambda x: str(x).split(" "))
+    dataset_head = berichte["Ueberschrift_lemmatized_cleaned_no_stopwords"].apply(lambda x: str(x).split(" "))
 
 
     vocab = gensim.corpora.Dictionary(dataset)
