@@ -258,7 +258,7 @@ def split_compound_words(documents):
         compound_words_split.columns = ["confidence", "first_word", "second_word"]
 
         # Only keep words that received positive confidence from the splitter
-        words_to_drop = compound_words_split["confidence"] <= 0
+        words_to_drop = compound_words_split["confidence"] < 0
         compound_words_split[words_to_drop] = " "
 
         compound_words_split["combined"] = compound_words_split["first_word"] + " " + compound_words_split["second_word"]
