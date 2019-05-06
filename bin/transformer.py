@@ -37,10 +37,14 @@ if __name__ == "__main__":
     # Remove author, which is the name of the author in brackets. This is the last word in the string
     berichte["Beschreibung"] = berichte["Beschreibung"].apply(lambda x: "".join(x.split(" ")[:-1]))
 
+    # Split compound words
+    berichte["Ueberschrift_split"] = tt.split_compound_words(berichte["Ueberschrift"])
+    berichte["Hauptartikel_split"] = tt.split_compound_words(berichte["Hauptartikel"])
+
     # Remove all dates from headline
-    berichte["Ueberschrift"] = berichte["Ueberschrift"].str.replace(r'\d+', '')
+    berichte["Ueberschrift_split"] = berichte["Ueberschrift_split"].str.replace(r'\d+', '')
     # Clean headline
-    berichte["Ueberschrift_cleaned"] = tt.clean_column(berichte["Ueberschrift"])
+    berichte["Ueberschrift_cleaned"] = tt.clean_column(berichte["Ueberschrift_split"])
     # Lemmatize words in headline text
     berichte["Ueberschrift_lemmatized"] = tt.lemmatize_document_list(berichte["Ueberschrift_cleaned"])
     # Clean headline again after lemmatization
@@ -50,7 +54,7 @@ if __name__ == "__main__":
 
 
     # Clean main article
-    berichte["Hauptartikel_cleaned"] = tt.clean_column(berichte["Hauptartikel"])
+    berichte["Hauptartikel_cleaned"] = tt.clean_column(berichte["Hauptartikel_split"])
     # Lemmatize words in main article text
     berichte["Hauptartikel_lemmatized"] = tt.lemmatize_document_list(berichte["Hauptartikel_cleaned"])
     # Clean main article again after lemmatization

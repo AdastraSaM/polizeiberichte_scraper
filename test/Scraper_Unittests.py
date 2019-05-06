@@ -1,6 +1,6 @@
 import unittest
 
-class ScraperTest():
+class ScraperTest(unittest.TestCase):
     pass
 
 

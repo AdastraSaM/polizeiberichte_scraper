@@ -1,6 +1,6 @@
 import unittest
 
-class TransformerTest():
+class TransformerTest(unittest.TestCase):
     pass
 
 
