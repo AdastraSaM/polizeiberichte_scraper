@@ -161,14 +161,19 @@ def extract_place(descriptions):
 def extract_author(descriptions):
     """
     Extracts the authors from the given list of descriptions
-    :param descriptions: A list of descriptions
+    :param descriptions: A pandas column
     :return: The list of authors
     """
-    authors = pd.Series([t.split(" ")[len(t.split(" ")) - 1] for t in descriptions])
-    # Replace all authors with incorrect format (hinting to a mistake in the description structure) by a dummy value
-    authors.replace(r'\(*+\)', '(Unknown)', inplace=True)
-    # Remove the brackets from the author token
-    authors = authors.map(lambda x: x.lstrip(r'(').rstrip(r')'))
+    # Get the 10 first characters
+    authors = descriptions.str[:10]
+    # Find ")" and get the text before
+    authors= authors.apply(lambda x: x[:find_nth_occurrence(x, ")", 0) + 1])
+    # Removing everything non-alphanumeric
+    authors = [re.sub("[^a-zA-Z äöüÄÖÜß]+", "", x) for x in authors]
+    # Convert to Pandas Series again
+    authors = pd.Series(authors)
+    # Strip white spaces or return empty string and convert to lower
+    authors = authors.apply(lambda x: x.lstrip() if pd.notnull(x) else "").str.lower()
     return authors
 
 
@@ -226,7 +231,7 @@ def clean_column(documents):
     :return: A list of cleaned documents
     """
     # Removing everything non-alphanumeric
-    documents = [re.sub("[^a-zA-Z äöüÄÖÜß]+", "", x) for x in documents]
+    documents = [re.sub("[^a-zA-Z äöüÄÖÜß]+", " ", x) for x in documents]
     # Converting to lowercase
     documents = [x.lower() for x in documents]
     documents = pd.Series(documents)

@@ -25,42 +25,41 @@ if __name__ == "__main__":
     # Remove location from headline
     berichte["Ueberschrift"] = berichte["Ueberschrift"].apply(lambda x: x[x.find(":") + 2:])
 
-    # Extract description
-    berichte["Beschreibung"] = tt.extract_description(berichte["Hauptartikel"])
-
-    # Remove start from the main article
-    berichte["Hauptartikel"] = tt.remove_start_from_main_article(berichte["Hauptartikel"])
-
     # Extract place and author from description
-    berichte["Author"] = tt.extract_author(berichte["Beschreibung"])
-
-    # Remove author, which is the name of the author in brackets. This is the last word in the string
-    berichte["Beschreibung"] = berichte["Beschreibung"].apply(lambda x: "".join(x.split(" ")[:-1]))
-
-    # Split compound words
-    berichte["Ueberschrift_split"] = tt.split_compound_words(berichte["Ueberschrift"])
-    berichte["Hauptartikel_split"] = tt.split_compound_words(berichte["Hauptartikel"])
+    berichte["Author"] = tt.extract_author(berichte["Hauptartikel"])
 
     # Remove all dates from headline
-    berichte["Ueberschrift_split"] = berichte["Ueberschrift_split"].str.replace(r'\d+', '')
+    berichte["Ueberschrift"] = berichte["Ueberschrift"].str.replace(r'\d+', '')
     # Clean headline
-    berichte["Ueberschrift_cleaned"] = tt.clean_column(berichte["Ueberschrift_split"])
+    berichte["Ueberschrift_clean"] = tt.clean_column(berichte["Ueberschrift"])
     # Lemmatize words in headline text
-    berichte["Ueberschrift_lemmatized"] = tt.lemmatize_document_list(berichte["Ueberschrift_cleaned"])
-    # Clean headline again after lemmatization
-    berichte["Ueberschrift_lemmatized_cleaned"] = tt.clean_column(berichte["Ueberschrift_lemmatized"])
+    berichte["Ueberschrift_lem"] = tt.lemmatize_document_list(berichte["Ueberschrift_clean"])
     # Remove stopwords from headline
-    berichte["Ueberschrift_lemmatized_cleaned_no_stopwords"] = berichte["Ueberschrift_lemmatized_cleaned"].apply(tt.remove_stopwords)
+    berichte["Ueberschrift_lem_no_stop"] = berichte["Ueberschrift_lem"].apply(tt.remove_stopwords)
+    # Split compound words
+    berichte["Ueberschrift_split"] = tt.split_compound_words(berichte["Ueberschrift_lem_no_stop"])
+    # Clean headline
+    berichte["Ueberschrift_clean2"] = tt.clean_column(berichte["Ueberschrift_split"])
+    # Lemmatize words in headline text
+    berichte["Ueberschrift_lem2"] = tt.lemmatize_document_list(berichte["Ueberschrift_clean2"])
+    # Clean headline again after lemmatization
+    berichte["Ueberschrift_lem_clean2"] = tt.clean_column(berichte["Ueberschrift_lem2"])
+    # Remove stopwords from headline
+    berichte["Ueberschrift_lem_clean_no_stop"] = berichte["Ueberschrift_lem_clean2"].apply(tt.remove_stopwords)
+    # Combine with original Headline
+    berichte["Ueberschrift_kombi"] = berichte["Ueberschrift_lem_clean_no_stop"]+" " +berichte["Ueberschrift_lem_no_stop"]
 
 
     # Clean main article
-    berichte["Hauptartikel_cleaned"] = tt.clean_column(berichte["Hauptartikel_split"])
+    berichte["Hauptartikel_clean"] = tt.clean_column(berichte["Hauptartikel"])
     # Lemmatize words in main article text
-    berichte["Hauptartikel_lemmatized"] = tt.lemmatize_document_list(berichte["Hauptartikel_cleaned"])
+    berichte["Hauptartikel_lem"] = tt.lemmatize_document_list(berichte["Hauptartikel_clean"])
     # Clean main article again after lemmatization
-    berichte["Hauptartikel_lemmatized_cleaned"] = tt.clean_column(berichte["Hauptartikel_lemmatized"])
+    berichte["Hauptartikel_lemm_clean"] = tt.clean_column(berichte["Hauptartikel_lem"])
     # Remove stopwords from main article
-    berichte["Hauptartikel_lemmatized_cleaned_no_stopwords"] = berichte["Hauptartikel_lemmatized_cleaned"].apply(tt.remove_stopwords)
+    berichte["Hauptartikel_lem_clean_no_stop"] = berichte["Hauptartikel_lemm_clean"].apply(tt.remove_stopwords)
+    # Remove author from main article
+    berichte['Hauptartikel_lem_clean_no_stop'] = berichte['Hauptartikel_lem_clean_no_stop'].replace(to_replace=r'\b' + berichte['Author'] + r'\b', value='', regex=True)
 
 
     # Export transformed data to file
