@@ -7,7 +7,7 @@ from modules import scraping_tools as st
 
 HOSTNAME = "https://www.presseportal.de"
 START_PAGE = HOSTNAME + "/blaulicht/nr/4970"
-COUNT_OF_SUBSEQUENT_SITES = 220
+COUNT_OF_SUBSEQUENT_SITES = 299
 
 
 def scrape_from_web():

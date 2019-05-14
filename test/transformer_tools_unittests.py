@@ -30,7 +30,16 @@ class TransformerToolsTest(unittest.TestCase):
         self.assertEqual(result, True)
 
     def test_clean_headline(self):
-        self.fail()
+        headline = pd.Series(["POL-F: 190512 - 522 Frankfurt-Sachsenhausen: Fußgängerin angefahren",
+                             "POL-F: 190512 - 521 Frankfurt-Bahnhofsviertel: 27-Jährige flüchtet nach Auffahrunfall"])
+        cleaned_headlines = tt.clean_headline(headline)
+
+        expected = ["12 -  Frankfurt-Sachsenhausen: Fußgängerin angefahren",
+                    "12 -  Frankfurt-Bahnhofsviertel: 27-Jährige flüchtet nach Auffahrunfall"]
+
+        result = (cleaned_headlines == expected).any()
+
+        self.assertTrue(result)
 
     def test_find_nth_occurrence(self):
         self.assertEqual(tt.find_nth_occurrence("aaaaa", "a", 0), 1)

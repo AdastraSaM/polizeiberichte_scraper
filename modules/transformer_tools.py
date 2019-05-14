@@ -64,7 +64,7 @@ def extract_date_from_column(df, column):
 
 def clean_headline(headlines):
     """
-    Removes leading and trailing whitespaces from the Headline column and removes unnecessary parts.
+    Removes leading and trailing whitespaces from the headline column and removes unnecessary parts.
 
     :param headlines: A list of headlines
     :return: A list of cleaned headlines
