@@ -42,9 +42,11 @@ def extract_date_from_column(df, column):
     :return:
     """
     print("Extracting date from column {}".format(column))
-    df["Datum"] = df["Ueberschrift"].str.extract(r'(\d+)')
+    df["Datum"] = df[column].str.extract(r'(\d+)')
     print("Date extracted")
+    # Format date
     df["Datum"] = df["Datum"].apply(lambda x: "{}{}".format("20", x))
+    # If no date was found, fill with the last available date
     df["Datum"].fillna(method="ffill", inplace=True)
     # If first value was missing, propagate first known value backwards
     df["Datum"].fillna(method="bfill", inplace=True)
