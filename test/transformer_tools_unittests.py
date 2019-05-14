@@ -16,7 +16,18 @@ class TransformerToolsTest(unittest.TestCase):
         self.assertEqual(tt.parse_timestamp(["05.05.2019 – 10:47", "06.10.2018 – 1:47", "04.05.2016 - 00:00"]), [parse("05.05.2019 10:47"), parse("06.10.2018 1:47"), parse("04.05.2016 00:00")])
 
     def test_extract_date_from_column(self):
-        self.fail()
+        df_with_dates = pd.DataFrame(columns=["datecol", "othercol"])
+        df_with_dates["datecol"] = ["There is some date (06.05.2019) in this string", "There is no date here"]
+        df_with_dates["othercol"] = ["This is some other data", 12345]
+
+        df_expected = pd.DataFrame(df_with_dates)
+        df_expected["Datum"] = ["20190506", ""]
+
+        df_extracted = tt.extract_date_from_column(df_with_dates, "datecol")
+
+        result = df_extracted.equals(df_expected)
+
+        self.assertEqual(result, True)
 
     def test_clean_headline(self):
         self.fail()
