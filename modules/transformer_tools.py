@@ -37,9 +37,9 @@ def extract_date_from_column(df, column):
     """
     Extracts the date from a given column. If a row does not contain a date, the date of the previous row is used.
 
-    :param df: A dataframe with dates
+    :param df: A dataframe with dates in the given column
     :param column: A column that contains the dates
-    :return:
+    :return: The dataframe with a new column that contains the extracted dates
     """
     print("Extracting date from column {}".format(column))
     df["Datum"] = df[column].str.extract(r'(\d+)')
