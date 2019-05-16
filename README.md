@@ -9,11 +9,22 @@ https://www.presseportal.de/blaulicht/nr/4970/
 The raw data is scraped, cleaned up and stored in a csv file.
 
 ## Analysis
-The notebook Basic_Analysis.ipynb can be used for basic inspection of the data and its metadata. The more advanced text
-analytics are currently contained in the notebook PolizeiScrape2.3.ipynb. They will be rewritten as a standalone python 
-module.
+The notebooks TextAnalysis2.ipynb and TextAnalysis3.ipynb contain basic analysis of the data.
 
-## Upcoming features
-The following extensions could be implemented
-* Inclusion of more (meta-)data from the scraped pages
-* Extension of the scraping to more departments (capping at country-level by scraping news for all German departments)
+## Author prediction
+the probabilities for each author.
+
+The model was built in the notebook author_prediction_model_notebook.ipynb. Currently we use a 
+plain vanilla support vector machine on the tfidf matrix.
+
+The model was trained on a complete scrape of the ~8000 articles that were available at May 8th 2019.
+
+Most of the articles that were published since then were correctly classified by the algorithm.
+
+## How to try author prediction
+To try the author prediction yourself, download the pickled model from /resources/pickled/ and the 
+notebook predict_author.ipynb .
+Just paste the article text (of course without the author token :-) ) into the variable new_text as a raw string, 
+then execute the notebook. The barplot that is generated in the last cell shows the predicted probabilities for the authors.
+
+You can also write your own article into the variable and see which author it fits best.
