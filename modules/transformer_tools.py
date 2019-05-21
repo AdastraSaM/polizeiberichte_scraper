@@ -102,9 +102,9 @@ def find_nth_occurrence(string, substring, n):
 
 def extract_location_from_headline(headlines):
     """
-    Extracts the location from the headlines. The location begins after the first occurence of a ":".
+    Extracts the location from the headlines. The location begins after the first occurrence of a ":".
 
-    If there are multiple locations, these are separated by a space, "/" or "-", then all secondary locations (those
+    If there are two locations, these are separated by a space, "/" or "-", then all secondary locations (those
     after the first separator) will be stored in a new column Location2.
     :param headlines: A list of headlines.
     :return: A list of Locations and a second list of secondary locations
@@ -124,40 +124,6 @@ def extract_location_from_headline(headlines):
 
     print("Extraction complete.")
     return locations, secondary_locations
-
-
-def extract_description(main_articles):
-    """
-    Extracts the descriptions from the main article text.
-
-    :param main_articles: A list of article texts
-    :return: A list of descriptions
-    """
-    descriptions = main_articles.apply(lambda x: x[0: find_nth_occurrence(x, ")", 1) + 1])
-
-    # Strip leading and trailing spaces from descriptions
-    descriptions = descriptions.apply(lambda x: x.strip())
-
-    return descriptions
-
-
-def remove_start_from_main_article(main_articles):
-    """
-    Removes the beginning of the main articles which is not needed.
-    :param main_articles: A list of main article texts
-    :return: The given list but with the unnecessary beginning cleaned from the texts
-    """
-    return main_articles.apply(lambda x: x[find_nth_occurrence(x, ")", 1) + 1:])
-
-
-def extract_place(descriptions):
-    """
-    Extracts the places from the descriptions
-    :param descriptions: A list of descriptions
-    :return: The list of places
-    """
-    places = pd.Series([t.split(" ")[0] for t in descriptions])
-    return places
 
 
 def extract_author(descriptions):
