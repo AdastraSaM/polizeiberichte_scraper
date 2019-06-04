@@ -2,7 +2,6 @@
 Utility functions for the cleaning of the scraped data, and transformation, extraction for feature engineering
 """
 
-
 import pandas as pd
 import re
 from dateutil.parser import parse
@@ -18,7 +17,10 @@ package_path = get_package_path(model_name)
 link(model_name, model_name, force=True, model_path=package_path)
 nlp = spacy.load("de_core_news_sm")
 
+# File of Stopwords to be excluded
 STOPWORDS_FILE = "Stopwords1.txt"
+# File of Topics to be excluded
+TopicFilter = "Themenfilter.txt"
 
 
 def parse_timestamp(timestamps):
@@ -33,35 +35,6 @@ def parse_timestamp(timestamps):
     return timestamps_parsed
 
 
-def extract_date_from_column(df, column):
-    """
-    Extracts the date from a given column. If a row does not contain a date, the date of the previous row is used.
-
-    :param df: A dataframe with dates in the given column
-    :param column: A column that contains the dates
-    :return: The dataframe with a new column that contains the extracted dates
-    """
-    print("Extracting date from column {}".format(column))
-    df["Datum"] = df[column].str.extract(r'(\d+)')
-    print("Date extracted")
-    # Format date
-    df["Datum"] = df["Datum"].apply(lambda x: "{}{}".format("20", x))
-    # If no date was found, fill with the last available date
-    df["Datum"].fillna(method="ffill", inplace=True)
-    # If first value was missing, propagate first known value backwards
-    df["Datum"].fillna(method="bfill", inplace=True)
-
-    # Remove erroneous formatted dates
-    df["Datum"] = df["Datum"].str.replace(r"^([\d]{8})", "")
-    # Convert dates to datetime
-    df["Datum"] = df["Datum"].apply(lambda x: pd.to_datetime(str(x), format="%Y%m%d") if len(x) == 8 else "")
-
-    # Remove extracted date from the original column
-    df[column] = df[column].str.replace(r"\d+", "")
-    print("Extraction complete.")
-    return df
-
-
 def clean_headline(headlines):
     """
     Removes leading and trailing whitespaces from the headline column and removes unnecessary parts.
@@ -74,7 +47,22 @@ def clean_headline(headlines):
     # Remove beginning from Headline (remove 4digit Number)
     headlines = headlines.str.replace(r"\d{4}", "", regex=True)
     headlines = headlines.str.replace(r"\d{3}", "", regex=True)
+    headlines = headlines.str.replace(r"\d+", "")
     headlines = headlines.str.replace("POL-F:", "")
+    headlines = headlines.str.replace("Frankfurt-", "")
+
+    headlines = headlines.str.replace("/", " ")
+    headlines = headlines.str.replace("-", " ")
+    headlines = headlines.str.replace(":", " : ")
+
+    headlines = headlines.str.replace("Frankfurter Berg", "Frankfurter-Berg", n=1)
+    headlines = headlines.str.replace("Frankfurter Weihnachtsmarkt", "Frankfurter-Weihnachtsmarkt", n=1)
+    headlines = headlines.str.replace("Frankfurter Bahnhofsviertel", "Bahnhofsviertel", n=1)
+    headlines = headlines.str.replace("Nieder Erlenbach", "Nieder-Erlenbach", n=1)
+    headlines = headlines.str.replace("Nieder Eschbach", "Nieder-Eschbach", n=1)
+    headlines = headlines.str.replace("BAB", "Bundesautobahn", n=1)
+    headlines = headlines.str.replace("Bad Homburg", "Bad-Homburg", n=1)
+    headlines = headlines.str.lower()
 
     headlines = headlines.apply(lambda x: x.lstrip(" -"))
     print("Headlines cleaned.")
@@ -100,11 +88,26 @@ def find_nth_occurrence(string, substring, n):
     return i
 
 
+def get_tuple_of_locations(Col):
+    """
+    Gets a lowercase tuple of the words that appear at least 10 times in the column.
+    In this context used to extract locations
+    :param Col: Column with the locations
+    :return:
+    """
+    Col = Col.str.lower()
+    Locations = Col.value_counts() > 10
+    Locations = list(pd.DataFrame(Col.value_counts()[Locations]).index.values)
+    Locations = ' '.join(Locations).split()
+    Locations = tuple(Locations)
+    return Locations
+
+
 def extract_location_from_headline(headlines):
     """
-    Extracts the location from the headlines. The location begins after the first occurrence of a ":".
+    Extracts the location from the headlines. The location begins after the first occurence of a ":".
 
-    If there are two locations, these are separated by a space, "/" or "-", then all secondary locations (those
+    If there are multiple locations, these are separated by a space, "/" or "-", then all secondary locations (those
     after the first separator) will be stored in a new column Location2.
     :param headlines: A list of headlines.
     :return: A list of Locations and a second list of secondary locations
@@ -113,7 +116,15 @@ def extract_location_from_headline(headlines):
     locations = headlines.apply(lambda x: x[0:x.find(":")])
     locations = locations.str.replace("/", " ")
     locations = locations.str.replace("-", " ")
-    locations = locations.str.replace("Frankfurt", "")
+    locations = locations.str.replace("frankfurt ", "", n=1)
+    locations = locations.str.replace("frankfurter berg", "frankfurter-berg", n=1)
+    locations = locations.str.replace("frankfurter weihnachtsmarkt", "frankfurter-weihnachtsmarkt", n=1)
+    locations = locations.str.replace("frankfurter bahnhofsviertel", "bahnhofsviertel", n=1)
+    locations = locations.str.replace("nieder erlenbach", "nieder-erlenbach", n=1)
+    locations = locations.str.replace("nieder eschbach", "nieder-eschbach", n=1)
+    locations = locations.str.replace("bab", "bundesautobahn", n=1)
+    locations = locations.str.replace("bad homburg", "bad-homburg", n=1)
+    locations = locations.str.replace("alt sachsenhausen", "alt-sachsenhausen", n=1)
     locations = locations.apply(lambda x: x.lstrip())
 
     # Extract second location
@@ -126,6 +137,66 @@ def extract_location_from_headline(headlines):
     return locations, secondary_locations
 
 
+def get_locations_by_tuple(col, tuple):
+    """
+    Extracts locations from a given column for a given list
+    :param col: Column containing the locations
+    :param tuple: Tuple with the locations to be extracted
+    :return: 3 columns of locations
+    """
+    col = col.apply(lambda x: [j for j in x.split() if j.lower() in tuple])
+    col1 = col.str[0]
+    col2 = col.str[1]
+    col3 = col.str[2]
+    col4 = col.str[3]
+    return col1, col2, col3,col4
+
+
+def remove_word_from_other_column(main_col, words_col1):
+    """
+    Removes word from a given column provided by a second column
+    :param main_col: Column where the words should be removed from
+    :param words_col1: Column containing the words that should be removed
+    :return: Original column without the words that should be removed
+    """
+
+    return [e.replace(k, '') for e, k in zip(main_col.astype('str'), words_col1.astype('str'))]
+
+
+def extract_description(main_articles):
+    """
+    Extracts the descriptions from the main article text.
+
+    :param main_articles: A list of article texts
+    :return: A list of descriptions
+    """
+    descriptions = main_articles.apply(lambda x: x[0: find_nth_occurrence(x, ")", 1) + 1])
+
+    # Strip leading and trailing spaces from descriptions
+    descriptions = descriptions.apply(lambda x: x.strip())
+
+    return descriptions
+
+
+def remove_start_from_main_article(main_articles):
+    """
+    Removes the beginning of the main articles which is not needed.
+    :param main_articles: A list of main article texts
+    :return: The given list but with the unnecessary beginning cleaned from the texts
+    """
+    return main_articles.apply(lambda x: x[find_nth_occurrence(x, ")", 1) + 1:])
+
+
+def extract_place(descriptions):
+    """
+    Extracts the places from the descriptions
+    :param descriptions: A list of descriptions
+    :return: The list of places
+    """
+    places = pd.Series([t.split(" ")[0] for t in descriptions])
+    return places
+
+
 def extract_author(descriptions):
     """
     Extracts the authors from the given list of descriptions
@@ -135,7 +206,7 @@ def extract_author(descriptions):
     # Get the 10 first characters
     authors = descriptions.str[:10]
     # Find ")" and get the text before
-    authors= authors.apply(lambda x: x[:find_nth_occurrence(x, ")", 0) + 1])
+    authors = authors.apply(lambda x: x[:find_nth_occurrence(x, ")", 0) + 1])
     # Removing everything non-alphanumeric
     authors = [re.sub("[^a-zA-Z äöüÄÖÜß]+", "", x) for x in authors]
     # Convert to Pandas Series again
@@ -151,12 +222,15 @@ def lemmatize_as_string(document):
     :param document: A document to be lemmatized.
     :return: A string of lemmatized words, separated by spaces
     """
-    doc = nlp(text=document)
-    lemmatized_words = []
-    for token in doc:
-        lemmatized_words.append(token.lemma_)
-    lemmatized_document = " ".join(lemmatized_words)
-    return lemmatized_document
+    try:
+        doc = nlp(text=document)
+        lemmatized_words = []
+        for token in doc:
+            lemmatized_words.append(token.lemma_)
+        lemmatized_document = " ".join(lemmatized_words)
+        return lemmatized_document
+    except:
+        return ""
 
 
 def get_stopword_list():
@@ -168,6 +242,28 @@ def get_stopword_list():
     stopwords = list(stopwords)
     stopwords = list(map(lambda s: s.strip(), stopwords))
     return stopwords
+
+
+def get_topicfilter_list():
+    """
+    Gets the words that should not be included in topics from the file.
+    :return: List of words/topics
+    """
+    Themenfilter = open(r"../resources/%s" % TopicFilter, "r")
+    Themenfilter = list(Themenfilter)
+    Themenfilter = list(map(lambda s: s.strip(), Themenfilter))
+    return Themenfilter
+
+
+def FilterTopics(DF, Column_Name, Filterwords_List):
+    """
+    Keeps only the rows of a Dataframe where the filter words are not present in the specified column
+    :param DF: DataFrame which should be filtered
+    :param Column_Name: Name of the Column of the Dataframe which should be filtered. Must be given as a string
+    :param Filterwords_List: List of topics/words that should be filtered
+    :return:
+    """
+    return DF[~DF[Column_Name].str.lower().str.contains('|'.join(Filterwords_List), na=False)]
 
 
 def get_string_from_list(liste):
@@ -199,6 +295,7 @@ def clean_column(documents):
     :return: A list of cleaned documents
     """
     # Removing everything non-alphanumeric
+    # documents.fillna(value="", inplace=True)
     documents = [re.sub("[^a-zA-Z äöüÄÖÜß]+", " ", x) for x in documents]
     # Converting to lowercase
     documents = [x.lower() for x in documents]
@@ -217,11 +314,11 @@ def split_compound_words(documents):
     """
     # Create a matrix of the words from the documents. The n-th col contains the n-th word in the document.
     words = documents.str.split(' ', expand=True)
-    words = words.rename(columns=lambda x: "string_{}".format(x+1))
+    words = words.rename(columns=lambda x: "string_{}".format(x + 1))
 
     for word_position in words.columns:
         documents = words[word_position]
-        documents.fillna(value="", inplace= True)
+        documents.fillna(value="", inplace=True)
 
         # Splitting
         compound_words_split = documents.apply(char_split.split_compound)
@@ -230,15 +327,16 @@ def split_compound_words(documents):
         compound_words_split.columns = ["confidence", "first_word", "second_word"]
 
         # For non-compound words first_word and second_word are equal. To evade doubling these words, remove second word
-        compound_words_split.loc[compound_words_split["first_word"] == compound_words_split["second_word"], "second_word"] = ""
+        compound_words_split.loc[
+            compound_words_split["first_word"] == compound_words_split["second_word"], "second_word"] = ""
 
         # Only keep words that received positive confidence from the splitter
         words_to_drop = compound_words_split["confidence"] < 0
         compound_words_split[words_to_drop] = " "
-
-        compound_words_split["combined"] = compound_words_split["first_word"] + " " + compound_words_split["second_word"]
+        compound_words_split["combined"] = compound_words_split["first_word"] + " " + compound_words_split[
+            "second_word"]
         words[word_position] = compound_words_split["combined"]
-
+        words.fillna(value="", inplace=True)
     # Connect the words for each document into a long, space-separated string
     words["all_combined"] = words.apply(' '.join, axis=1)
     return words["all_combined"]
