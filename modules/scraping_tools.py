@@ -1,6 +1,10 @@
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import time
+import re
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
 
 SLEEP_SECS = 0.3
 HOSTNAME = "https://www.presseportal.de"
@@ -105,7 +109,7 @@ def remove_control_characters(df, column):
     return df
 
 
-def get_news_from_links(links):
+def get_news_from_links(links, use_host=False,timeout=10):
     """
     Extracts the headline and main article text from each given link. Links that could not be found are placed in a
     separate list.
@@ -114,15 +118,37 @@ def get_news_from_links(links):
     :return: The headline string, the main article text, and timestamp of the article
     """
     print("Getting data from links...")
+    # Set Hostname to an empty string by default
+    if use_host ==False:
+        HOSTNAME = ""
+    links = list(links)
+    lenght = len(links)
     counter = 0
     news = []
     headlines = []
     main_article_texts = []
     timestamp = []
+    word_list = ["Rückfragen bitte an", 'Rufbereitschaft hat', "Original-Content von", "Bereitschaftsdienst",
+                "ots-Originaltext"]
+
     for link in links:
         print("Parsing article from link {}".format(link))
-        html = urlopen(HOSTNAME + link)
-        bs = BeautifulSoup(html, "html.parser")
+        try:
+            html = urlopen(HOSTNAME + link, timeout=timeout)
+            bs = BeautifulSoup(html, "html.parser")
+        except:
+            try:
+                html = urlopen(HOSTNAME + link, timeout=timeout)
+                bs = BeautifulSoup(html, "html.parser")
+            except:
+                try:
+                    browser = webdriver.Chrome(executable_path=r'C:\Users\webdrivers\chromedriver.exe')
+                    browser.get(link)
+                    source = browser.page_source
+                    bs = BeautifulSoup(source, 'html')
+                except:
+                    pass
+
         article = bs.find("article")
         timestamp += [article.find("p", class_="date").text]
         headlines += [article.find("h1").get_text()]
@@ -131,18 +157,33 @@ def get_news_from_links(links):
         main_article_text = ""
         # The first two <p> tags are timestamp and headline
         for tag in article.find_all("p")[3:]:
-            # Stop adding data when the end of the article text is reached
-            if tag.text.find("Rückfragen bitte an") != -1 or tag.text.find("Original-Content von") != -1:
-                break
             # If the end is not reached, add text
             main_article_text += tag.text
-
+            # Stop adding data when the end of the article text is reached
+            if (findFirstOccurence(wordList=word_list, bigString=tag.text)) != (-1):
+                break
+        # Cut the end from the news if a word from the word_list is found
+        num_last_word = findFirstOccurence(word_list, bigString=main_article_text)
+        main_article_text = main_article_text[0:num_last_word]
         main_article_texts += [main_article_text]
 
         counter += 1
         news.append(HOSTNAME + link)
         time.sleep(SLEEP_SECS)
-        print("found-> " + str(counter) + " of " + str(len(links)))
+        print("found-> " + str(counter) + " of " + str(lenght))
     print("Got data.")
     return headlines, main_article_texts, news, timestamp
 
+def findFirstOccurence(wordList, bigString, startIndex=0):
+    """
+
+    :param wordList: List of Words that are to be found
+    :param bigString: String where the words shall be found
+    :param startIndex: default is 0
+    :return: Position of the string that got found, return "-1" if nothing found
+    """
+    try:
+        num = (re.search('|'.join(wordList), bigString[startIndex:]).start())
+    except:
+        num = -1
+    return num
