@@ -90,7 +90,7 @@ def find_nth_occurrence(string, substring, n):
 
 def get_tuple_of_locations(Col):
     """
-    Gets a lowercase tuple of the words that appear at least 10 times in the column.
+    Gets a lowercase tuple of the words that appear at least 10 times in the column and are longer than 2 characters.
     In this context used to extract locations
     :param Col: Column with the locations
     :return:
@@ -99,6 +99,7 @@ def get_tuple_of_locations(Col):
     Locations = Col.value_counts() > 10
     Locations = list(pd.DataFrame(Col.value_counts()[Locations]).index.values)
     Locations = ' '.join(Locations).split()
+    Locations = [item for item in Locations if len(item) > 2]
     Locations = tuple(Locations)
     return Locations
 
@@ -400,7 +401,8 @@ def clean_headline(headlines):
     :return: A list of cleaned headlines
     """
     print("Cleaning headlines...")
-    headlines = headlines.apply(lambda x: x.lstrip())
+
+    headlines = headlines.str.lstrip()
     # Remove beginning from Headline (remove 4digit Number)
     headlines = headlines.str.replace(r"\d{4}", "", regex=True)
     headlines = headlines.str.replace(r"\d{3}", "", regex=True)
@@ -419,9 +421,12 @@ def clean_headline(headlines):
     headlines = headlines.str.replace("Nieder Eschbach", "Nieder-Eschbach", n=1)
     headlines = headlines.str.replace("BAB", "Bundesautobahn", n=1)
     headlines = headlines.str.replace("Bad Homburg", "Bad-Homburg", n=1)
+    headlines = headlines.str.replace("Bergen Enkheim", "Bergen-Enkheim", n=1)
+
+
     headlines = headlines.str.lower()
 
-    headlines = headlines.apply(lambda x: x.lstrip(" -"))
+    headlines = headlines.str.strip(" -")
     print("Headlines cleaned.")
     return headlines
 
