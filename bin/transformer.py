@@ -40,7 +40,6 @@ if __name__ == "__main__":
 
     # Get locations only from news that are younger because they have a more reliable format
     Loc_Tuple = tt.get_tuple_of_locations(berichte["Ort"][berichte["Year"] > 2008])
-
     print(Loc_Tuple)
 
     berichte["Loc1"], berichte["Loc2"], berichte["Loc3"], berichte["Loc4"] = tt.get_locations_by_tuple(
@@ -49,8 +48,17 @@ if __name__ == "__main__":
     # Remove location from headline
     berichte["Ueberschrift"] = berichte["Ueberschrift"].str.replace(' |'.join(list(Loc_Tuple)), '')
 
-    # Extract place and author from description
+    # Extract author from description
     berichte["Author"] = tt.extract_author(berichte["Hauptartikel"])
+
+    # Extract author from the end of the article
+    berichte.index = range(len(berichte))
+    berichte["Author2"] = tt.extract_author_from_end(berichte["Hauptartikel"])
+
+    # Extract the authors from the end in a new column to remove them from the main article
+    authors = berichte['Hauptartikel'].str[-40:-1].str.extract(r"\((.*?)\)", expand=False)
+    authors = authors.fillna("")
+    berichte['Hauptartikel'] = tt.remove_word_from_other_column(berichte['Hauptartikel'], authors)
 
     # Remove all dates from headline
     berichte["Ueberschrift"] = berichte["Ueberschrift"].str.replace(r'\d+', '')

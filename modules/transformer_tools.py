@@ -461,6 +461,7 @@ def get_tuple_of_locations(Col):
     Locations = Col.value_counts() > 10
     Locations = list(pd.DataFrame(Col.value_counts()[Locations]).index.values)
     Locations = ' '.join(Locations).split()
+    Locations = [item for item in Locations if len(item) > 2]
     Locations = tuple(Locations)
     return Locations
 
@@ -487,6 +488,10 @@ def extract_location_from_headline(headlines):
     locations = locations.str.replace("bab", "bundesautobahn", n=1)
     locations = locations.str.replace("bad homburg", "bad-homburg", n=1)
     locations = locations.str.replace("alt sachsenhausen", "alt-sachsenhausen", n=1)
+    locations = locations.str.replace("bad Homburg", "bad-homburg", n=1)
+    locations = locations.str.replace("bergen enkheim", "bergen-enkheim", n=1)
+    locations = locations.str.replace("westend nord", "westend-nord", n=1)
+
     locations = locations.apply(lambda x: x.lstrip())
 
     # Extract second location
@@ -577,6 +582,21 @@ def extract_author(descriptions):
     authors = authors.apply(lambda x: x.lstrip() if pd.notnull(x) else "").str.lower()
     return authors
 
+def extract_author_from_end(hauptartikel):
+    """
+    Extracts the authors from the end of the article
+    :param hauptartikel: the column of the main news article
+    :return: column with the extracted authors
+    """
+    authors = hauptartikel.str[-60:-1].str.extract(r"\((.*?)\)", expand=False)
+    authors = authors.fillna("")
+    authors = [re.sub("[^a-zA-Z äöüÄÖÜß]+", "", x) for x in authors]
+    authors = [re.sub("Telefon", "", x) for x in authors]
+    authors = [re.sub("Tel.", "", x) for x in authors]
+    authors = pd.Series(authors)
+    authors = authors.apply(lambda x: x.strip() if pd.notnull(x) else "").str.lower()
+    authors = pd.Series(authors)
+    return authors
 
 def lemmatize_as_string(document):
     """
