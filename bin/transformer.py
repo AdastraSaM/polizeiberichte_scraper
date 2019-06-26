@@ -86,6 +86,8 @@ if __name__ == "__main__":
     # Combine with original Headline
     berichte["Ueberschrift_kombi"] = berichte["Ueberschrift_lem_clean_no_stop"] + " " + berichte[
         "Ueberschrift_lem_no_stop"]
+    # Remove duplicates from Uberschirft_kombi
+    berichte["Ueberschrift_kombi"] =berichte["Ueberschrift_kombi"].str.split(' ').apply(set).str.join(' ')
 
     # Clean main article
     berichte["Hauptartikel_clean"] = tt.clean_column(berichte["Hauptartikel"])
