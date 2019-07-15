@@ -2,12 +2,6 @@
 Utility functions for the cleaning of the scraped data, and transformation, extraction for feature engineering
 """
 
-import pandas as pd
-import re
-from dateutil.parser import parse
-
-from modules.ext import char_split
-
 import spacy
 from spacy.cli import link
 from spacy.util import get_package_path
