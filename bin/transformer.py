@@ -3,13 +3,11 @@ Cleaning, transformation and feature engineering on the scraped data
 """
 
 import pandas as pd
-import numpy as np
 from modules import transformer_tools as tt
 import glob
 
 if __name__ == "__main__":
     # Read the scraped raw data from file
-
     berichte = pd.concat(
         [pd.read_csv(f, sep=";", header="infer", encoding="UTF-8") for f in glob.glob(r"../out/ffm_news*.csv")])
 
@@ -25,10 +23,6 @@ if __name__ == "__main__":
 
     # Clean headlines
     berichte["Ueberschrift"] = tt.clean_headline(berichte["Ueberschrift"])
-
-    # Drop rows that are just a supplement or a correction
-    # berichte = berichte[~berichte["Ueberschrift"].str.contains("nachtrag", na=False)]
-    # berichte = berichte[~berichte["Ueberschrift"].str.contains("korrektur", na=False)]
 
     # Drop rows with NANs
     berichte = berichte.dropna()
