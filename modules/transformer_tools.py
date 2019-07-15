@@ -38,12 +38,12 @@ def parse_timestamp(timestamps):
 def clean_headline(headlines):
     """
     Removes leading and trailing whitespaces from the headline column and removes unnecessary parts.
-
     :param headlines: A list of headlines
     :return: A list of cleaned headlines
     """
     print("Cleaning headlines...")
-    headlines = headlines.apply(lambda x: x.lstrip())
+
+    headlines = headlines.str.lstrip()
     # Remove beginning from Headline (remove 4digit Number)
     headlines = headlines.str.replace(r"\d{4}", "", regex=True)
     headlines = headlines.str.replace(r"\d{3}", "", regex=True)
@@ -62,9 +62,12 @@ def clean_headline(headlines):
     headlines = headlines.str.replace("Nieder Eschbach", "Nieder-Eschbach", n=1)
     headlines = headlines.str.replace("BAB", "Bundesautobahn", n=1)
     headlines = headlines.str.replace("Bad Homburg", "Bad-Homburg", n=1)
+    headlines = headlines.str.replace("Bergen Enkheim", "Bergen-Enkheim", n=1)
+
+
     headlines = headlines.str.lower()
 
-    headlines = headlines.apply(lambda x: x.lstrip(" -"))
+    headlines = headlines.str.strip(" -")
     print("Headlines cleaned.")
     return headlines
 
@@ -106,8 +109,7 @@ def get_tuple_of_locations(locations_col):
 
 def extract_location_from_headline(headlines):
     """
-    Extracts the location from the headlines. The location begins after the first occurrence of a ":".
-
+    Extracts the location from the headlines. The location begins after the first occurence of a ":".
     If there are multiple locations, these are separated by a space, "/" or "-", then all secondary locations (those
     after the first separator) will be stored in a new column Location2.
     :param headlines: A list of headlines.
@@ -126,6 +128,10 @@ def extract_location_from_headline(headlines):
     locations = locations.str.replace("bab", "bundesautobahn", n=1)
     locations = locations.str.replace("bad homburg", "bad-homburg", n=1)
     locations = locations.str.replace("alt sachsenhausen", "alt-sachsenhausen", n=1)
+    locations = locations.str.replace("bad Homburg", "bad-homburg", n=1)
+    locations = locations.str.replace("bergen enkheim", "bergen-enkheim", n=1)
+    locations = locations.str.replace("westend nord", "westend-nord", n=1)
+
     locations = locations.apply(lambda x: x.lstrip())
 
     # Extract second location
@@ -216,6 +222,21 @@ def extract_author(descriptions):
     authors = authors.apply(lambda x: x.lstrip() if pd.notnull(x) else "").str.lower()
     return authors
 
+def extract_author_from_end(hauptartikel):
+    """
+    Extracts the authors from the end of the article
+    :param hauptartikel: the column of the main news article
+    :return: column with the extracted authors
+    """
+    authors = hauptartikel.str[-60:-1].str.extract(r"\((.*?)\)", expand=False)
+    authors = authors.fillna("")
+    authors = [re.sub("[^a-zA-Z äöüÄÖÜß]+", "", x) for x in authors]
+    authors = [re.sub("Telefon", "", x) for x in authors]
+    authors = [re.sub("Tel.", "", x) for x in authors]
+    authors = pd.Series(authors)
+    authors = authors.apply(lambda x: x.strip() if pd.notnull(x) else "").str.lower()
+    authors = pd.Series(authors)
+    return authors
 
 def lemmatize_as_string(document):
     """
@@ -254,6 +275,18 @@ def get_topicfilter_list():
     topic_filter = list(topic_filter)
     topic_filter = list(map(lambda s: s.strip(), topic_filter))
     return topic_filter
+
+
+def filter_topics(data, column_name, filter_wordlist):
+    """
+    Keeps only the rows of a Dataframe where the filter words are not present in the specified column
+    :param data: DataFrame which should be filtered
+    :param column_name: Name of the Column of the Dataframe which should be filtered. Must be given as a string
+    :param filter_wordlist: List of topics/words that should be filtered
+    :return:
+    """
+    return data[~data[column_name].str.lower().str.contains('|'.join(filter_wordlist), na=False)]
+
 
 def get_string_from_list(liste):
     """
@@ -344,13 +377,3 @@ def lemmatize_document_list(documents):
     # Concatenate as a long string
     lemmatized_berichte = [' '.join(x.split(" ")) for x in lemmatized_berichte]
     return lemmatized_berichte
-
-def filter_topics(data, column_name, filter_wordlist):
-    """
-    Keeps only the rows of a Dataframe where the filter words are not present in the specified column
-    :param data: DataFrame which should be filtered
-    :param column_name: Name of the Column of the Dataframe which should be filtered. Must be given as a string
-    :param filter_wordlist: List of topics/words that should be filtered
-    :return:
-    """
-    return data[~data[column_name].str.lower().str.contains('|'.join(filter_wordlist), na=False)]
