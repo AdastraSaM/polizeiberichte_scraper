@@ -3,19 +3,17 @@ Cleaning, transformation and feature engineering on the scraped data
 """
 
 import pandas as pd
-import numpy as np
 from modules import transformer_tools as tt
 import glob
 
 if __name__ == "__main__":
-    # Read the scraped raw data from file
-
+    # Read the scraped raw data from files
     berichte = pd.concat(
-        [pd.read_csv(f, sep=";", header="infer", encoding="UTF-8") for f in glob.glob(r"../out/ffm_news*.csv")])
+        [pd.read_csv(file, sep=";", header="infer", encoding="UTF-8") for file in glob.glob(r"../out/ffm_news*.csv")])
 
     # Drop rows where words are included in the filter/not wanted (remove news that are not crime related)
-    Topiclist = tt.get_topicfilter_list()
-    berichte = tt.FilterTopics(berichte, "Ueberschrift", Topiclist)
+    topic_list = tt.get_topicfilter_list()
+    berichte = tt.filter_topics(berichte, "Ueberschrift", topic_list)
 
     # Drop rows where the main article consists of less than 250 characters
     berichte = berichte[berichte["Hauptartikel"].str.len() > 250]
@@ -25,10 +23,6 @@ if __name__ == "__main__":
 
     # Clean headlines
     berichte["Ueberschrift"] = tt.clean_headline(berichte["Ueberschrift"])
-
-    # Drop rows that are just a supplement or a correction
-    # berichte = berichte[~berichte["Ueberschrift"].str.contains("nachtrag", na=False)]
-    # berichte = berichte[~berichte["Ueberschrift"].str.contains("korrektur", na=False)]
 
     # Drop rows with NANs
     berichte = berichte.dropna()
@@ -79,15 +73,13 @@ if __name__ == "__main__":
     berichte["Ueberschrift_lem2"] = tt.lemmatize_document_list(berichte["Ueberschrift_clean2"])
     # Clean headline again after lemmatization
     berichte["Ueberschrift_lem_clean2"] = tt.clean_column(berichte["Ueberschrift_lem2"])
-    # Remove stopwords from headline
-    # berichte["Ueberschrift_lem_clean2"].fillna(value="", inplace=True)
 
     berichte["Ueberschrift_lem_clean_no_stop"] = berichte["Ueberschrift_lem_clean2"].apply(tt.remove_stopwords)
     # Combine with original Headline
     berichte["Ueberschrift_kombi"] = berichte["Ueberschrift_lem_clean_no_stop"] + " " + berichte[
         "Ueberschrift_lem_no_stop"]
     # Remove duplicates from Uberschirft_kombi
-    berichte["Ueberschrift_kombi"] =berichte["Ueberschrift_kombi"].str.split(' ').apply(set).str.join(' ')
+    berichte["Ueberschrift_kombi"] = berichte["Ueberschrift_kombi"].str.split(' ').apply(set).str.join(' ')
 
     # Clean main article
     berichte["Hauptartikel_clean"] = tt.clean_column(berichte["Hauptartikel"])
