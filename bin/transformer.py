@@ -93,6 +93,8 @@ if __name__ == "__main__":
     berichte['Hauptartikel_lem_clean_no_stop'] = berichte['Hauptartikel_lem_clean_no_stop'].replace(
         to_replace=r'\b' + berichte['Author'] + r'\b', value='', regex=True)
 
+
+
     for i, (name, group) in enumerate(berichte.groupby('Year')):
         group.to_csv(r"../out/Polizeiberichte_transformed{}.csv".format(i),
                      sep=";",
